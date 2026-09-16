@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IISG Knowledge Base Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef2f5;
+    --surface: #ffffff;
+    --surface-alt: #e2e9ee;
+    --ink: #172329;
+    --ink-soft: #47565e;
+    --muted: #758790;
+    --accent: #406e8c;
+    --accent-strong: #294a60;
+    --accent-soft: #dbe7ee;
+    --line: #ccd7de;
+    --good: #3c7a4c;
+    --warn: #a9761f;
+    --crit: #a1392f;
+    --shadow: 0 1px 2px rgba(15, 26, 33, 0.07), 0 4px 16px rgba(15, 26, 33, 0.06);
+
+    --font-display: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --font-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10161a;
+      --surface: #182126;
+      --surface-alt: #1f2a31;
+      --ink: #e7edf1;
+      --ink-soft: #b6c5cc;
+      --muted: #7c8b93;
+      --accent: #86b3ce;
+      --accent-strong: #bcdaea;
+      --accent-soft: #203342;
+      --line: #2b3841;
+      --good: #6cb87e;
+      --warn: #d6a44e;
+      --crit: #d97a6c;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #10161a;
+    --surface: #182126;
+    --surface-alt: #1f2a31;
+    --ink: #e7edf1;
+    --ink-soft: #b6c5cc;
+    --muted: #7c8b93;
+    --accent: #86b3ce;
+    --accent-strong: #bcdaea;
+    --accent-soft: #203342;
+    --line: #2b3841;
+    --good: #6cb87e;
+    --warn: #d6a44e;
+    --crit: #d97a6c;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+
+  ::selection { background: var(--accent-soft); }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: 100vh;
+  }
+
+  /* ---------- Rail ---------- */
+
+  .rail {
+    background: var(--surface-alt);
+    border-right: 1px solid var(--line);
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .brand-mark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 19px;
+    letter-spacing: -0.01em;
+  }
+
+  .brand-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .search-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-box label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+  }
+
+  .search-input-wrap {
+    position: relative;
+  }
+
+  #search-input {
+    width: 100%;
+    padding: 10px 34px 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+
+  #search-input::placeholder { color: var(--muted); }
+
+  .search-spinner {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
+    animation: spin 0.7s linear infinite;
+    opacity: 0;
+  }
+  .search-spinner.active { opacity: 1; }
+  @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+  .rail-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  .rail-heading {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .trail-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+  }
+
+  .trail-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 7px 9px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .trail-item:hover { background: var(--surface); }
+  .trail-item.current {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-weight: 500;
+  }
+
+  .rail-empty {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  .rail-endpoint {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .rail-endpoint a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); }
+
+  /* ---------- Main ---------- */
+
+  .main {
+    padding: 34px 40px 60px;
+    max-width: 920px;
+  }
+
+  .empty-state {
+    margin-top: 10vh;
+    max-width: 520px;
+  }
+
+  .empty-state h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 30px;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+
+  .empty-state p {
+    color: var(--ink-soft);
+    margin: 0 0 8px;
+  }
+
+  .empty-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .chip-btn {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--accent-strong);
+    padding: 6px 11px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .chip-btn:hover { border-color: var(--accent); }
+
+  .error-banner {
+    background: var(--accent-soft);
+    border: 1px solid var(--crit);
+    color: var(--crit);
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+  }
+  .error-banner button {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: none;
+    border: 1px solid var(--crit);
+    color: var(--crit);
+    border-radius: 6px;
+    padding: 4px 9px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* results list */
+
+  .results-heading {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+
+  .result-card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    color: var(--ink);
+  }
+  .result-card:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+
+  .result-label {
+    font-weight: 500;
+    font-size: 15px;
+  }
+
+  .result-meta {
+    margin-top: 4px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .type-pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  .uri-sub {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  /* record view */
+
+  .record-header {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 26px;
+  }
+
+  .record-eyebrow {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .record-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 25px;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+
+  .record-uri {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+    margin-bottom: 12px;
+  }
+  .record-uri a { text-decoration: none; border-bottom: 1px dotted var(--line); }
+  .record-uri a:hover { border-bottom-color: var(--accent); }
+
+  .record-desc {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 10px 0 0;
+    max-width: 68ch;
+  }
+
+  .source-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  .source-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--surface-alt);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+  .source-chip b { color: var(--ink); font-weight: 600; }
+
+  .record-stats {
+    display: flex;
+    gap: 18px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+
+  .stat {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .stat b {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+
+  @media (max-width: 860px) {
+    .columns { grid-template-columns: 1fr; }
+  }
+
+  .column-heading {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .column-heading span { color: var(--ink-soft); font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 11px; }
+
+  .pred-group {
+    margin-bottom: 16px;
+  }
+
+  .pred-label {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px 3px 9px;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid var(--line);
+    border-bottom: none;
+  }
+  .pred-count {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .pred-rows {
+    border: 1px solid var(--line);
+    border-radius: 0 8px 8px 8px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .value-row {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .value-row:last-child { border-bottom: none; }
+
+  .value-main { min-width: 0; flex: 1; }
+
+  button.value-link {
+    display: block;
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    font-family: var(--font-body);
+    color: var(--ink);
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+  button.value-link:hover { color: var(--accent-strong); text-decoration: underline; }
+
+  .value-curie {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  .value-literal {
+    font-size: 13.5px;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .lit-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+
+  .graph-tag {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  .ext-link {
+    color: var(--muted);
+    text-decoration: none;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+  .ext-link:hover { color: var(--accent); }
+
+  .load-more-row {
+    padding: 8px 12px;
+  }
+  .load-more-btn {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    background: none;
+    border: 1px dashed var(--line);
+    color: var(--accent-strong);
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+  }
+  .load-more-btn:hover { border-color: var(--accent); }
+  .load-more-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .group-loading, .column-empty {
+    padding: 10px 12px;
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; }
+    .rail {
+      position: relative;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+    }
+    .main { padding: 26px 20px 50px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <span class="brand-mark">IISG Knowledge Base Explorer</span>
+    </div>
+    <div class="brand-sub">IISH knowledge graph</div>
+
+    <div class="search-box">
+      <label for="search-input">Search the graph</label>
+      <div class="search-input-wrap">
+        <input id="search-input" type="text" placeholder="A person, union, place…" autocomplete="off" spellcheck="false" />
+        <div class="search-spinner" id="search-spinner"></div>
+      </div>
+    </div>
+
+    <div class="rail-section" style="flex: 1;">
+      <div class="rail-heading"><span>Trail</span></div>
+      <ul class="trail-list" id="trail-list"></ul>
+    </div>
+
+    <div class="rail-endpoint">
+      Live SPARQL query against<br />
+      <a href="https://druid.datalegend.net/IISG/iisg-kg" target="_blank" rel="noopener">druid.datalegend.net/IISG/iisg-kg</a>
+    </div>
+  </aside>
+
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var ENDPOINT = "https://api.druid.datalegend.net/datasets/IISG/iisg-kg/services/iisg-kg/sparql";
+  var PAGE_SIZE = 20;
+
+  var PREFIXES = {
+    "https://schema.org/": "schema",
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#": "rdf",
+    "http://www.w3.org/2000/01/rdf-schema#": "rdfs",
+    "http://www.w3.org/2002/07/owl#": "owl",
+    "http://www.w3.org/2001/XMLSchema#": "xsd",
+    "http://xmlns.com/foaf/0.1/": "foaf",
+    "http://purl.org/dc/terms/": "dcterms",
+    "http://www.w3.org/2004/02/skos/core#": "skos",
+    "https://iisg.amsterdam/authority/person/": "person",
+    "https://iisg.amsterdam/id/item/": "item",
+    "https://triplydb.com/graph/": "graph",
+    "http://id.loc.gov/vocabulary/relators/": "relator",
+    "https://iisg.amsterdam/authority/title/": "title",
+    "https://iisg.amsterdam/marc/": "marc",
+    "https://www.ica.org/standards/RiC/ontology#": "rico",
+    "https://triplydb.com/.well-known/genid/": "skolem",
+    "https://triplydb.com/model/con/": "con",
+    "https://triplydb.com/model/def/": "def",
+    "https://triplydb.com/id/": "id",
+    "https://triplydb.com/model/scheme/": "scheme",
+    "https://triplydb.com/model/shp/": "shp"
+  };
+  var LOCAL_HOSTS = ["iisg.amsterdam", "triplydb.com", "druid.datalegend.net"];
+
+  var LABEL_PREDICATES = [
+    "https://schema.org/name",
+    "http://www.w3.org/2000/01/rdf-schema#label"
+  ];
+
+  // ---------- SPARQL plumbing ----------
+
+  function sparql(query) {
+    return fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/sparql-results+json"
+      },
+      body: "query=" + encodeURIComponent(query)
+    }).then(function (res) {
+      if (!res.ok) throw new Error("Query failed (HTTP " + res.status + ")");
+      return res.json();
+    }).then(function (json) {
+      return json.results.bindings;
+    });
+  }
+
+  function escLiteral(s) {
+    return String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/[\r\n]/g, " ");
+  }
+
+  function iriRef(uri) {
+    return "<" + String(uri).replace(/[<>\s"]/g, "") + ">";
+  }
+
+  // ---------- Display helpers ----------
+
+  function curie(uri) {
+    var bestPrefix = null, bestLen = 0;
+    for (var iri in PREFIXES) {
+      if (uri.indexOf(iri) === 0 && iri.length > bestLen) { bestPrefix = PREFIXES[iri]; bestLen = iri.length; }
+    }
+    if (bestPrefix) return bestPrefix + ":" + uri.slice(bestLen);
+    return null;
+  }
+
+  function shortLabel(uri) {
+    var c = curie(uri);
+    if (c) return c;
+    var m = uri.match(/([^/#]+)\/?$/);
+    return m ? decodeURIComponent(m[1]) : uri;
+  }
+
+  function isLocalUri(uri) {
+    try {
+      var host = new URL(uri).host;
+      return LOCAL_HOSTS.some(function (h) { return host === h || host.endsWith("." + h); });
+    } catch (e) { return true; }
+  }
+
+  function isSafeHref(uri) {
+    return /^https?:\/\//i.test(uri);
+  }
+
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      if (k === "class") node.className = attrs[k];
+      else if (k === "text") node.textContent = attrs[k];
+      else node.setAttribute(k, attrs[k]);
+    }
+    (children || []).forEach(function (c) { if (c) node.appendChild(c); });
+    return node;
+  }
+
+  function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+  // ---------- App state ----------
+
+  var trail = [];
+  var currentUri = null;
+
+  var mainEl = document.getElementById("main");
+  var trailListEl = document.getElementById("trail-list");
+  var searchInput = document.getElementById("search-input");
+  var searchSpinner = document.getElementById("search-spinner");
+
+  function pushTrail(uri, label) {
+    trail = trail.filter(function (t) { return t.uri !== uri; });
+    trail.unshift({ uri: uri, label: label });
+    if (trail.length > 25) trail.length = 25;
+    renderTrail();
+  }
+
+  function renderTrail() {
+    clear(trailListEl);
+    if (!trail.length) {
+      trailListEl.appendChild(el("li", { class: "rail-empty", text: "Nothing viewed yet." }));
+      return;
+    }
+    trail.forEach(function (t) {
+      var li = document.createElement("li");
+      var btn = el("button", {
+        class: "trail-item" + (t.uri === currentUri ? " current" : ""),
+        text: t.label || shortLabel(t.uri),
+        title: t.uri
+      });
+      btn.addEventListener("click", function () { navigate(t.uri); });
+      li.appendChild(btn);
+      trailListEl.appendChild(li);
+    });
+  }
+
+  function navigate(uri, opts) {
+    opts = opts || {};
+    if (!/^https?:\/\//i.test(uri)) { renderError("Not a browsable URI: " + uri); return; }
+    currentUri = uri;
+    history.pushState({ uri: uri }, "", "#" + encodeURIComponent(uri));
+    loadEntity(uri);
+  }
+
+  function syncFromHash() {
+    var hashUri = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (hashUri === currentUri) return;
+    if (hashUri && /^https?:\/\//i.test(hashUri)) { currentUri = hashUri; loadEntity(hashUri); }
+    else renderEmptyState();
+  }
+
+  window.addEventListener("popstate", syncFromHash);
+  window.addEventListener("hashchange", syncFromHash);
+
+  // ---------- Rendering: empty / error ----------
+
+  function renderEmptyState() {
+    currentUri = null;
+    renderTrail();
+    clear(mainEl);
+    var wrap = el("div", { class: "empty-state" });
+    wrap.appendChild(el("h1", { text: "Trace a record through the graph." }));
+    wrap.appendChild(el("p", { text: "Search for a person, trade union, place, archive or publication. This explorer shows everything the graph says about it, and everything that points back — grouped by predicate and by the source graph it came from." }));
+    var ex = el("div", { class: "empty-examples" });
+    ["dockworkers", "Rotterdam", "International Institute of Social History", "Jan Lucassen"].forEach(function (term) {
+      var b = el("button", { class: "chip-btn", text: term });
+      b.addEventListener("click", function () { searchInput.value = term; runSearch(term); });
+      ex.appendChild(b);
+    });
+    wrap.appendChild(ex);
+    mainEl.appendChild(wrap);
+  }
+
+  function renderError(message, retry) {
+    var banner = el("div", { class: "error-banner" });
+    banner.appendChild(el("span", { text: message }));
+    if (retry) {
+      var btn = el("button", { text: "Retry" });
+      btn.addEventListener("click", retry);
+      banner.appendChild(btn);
+    }
+    mainEl.insertBefore(banner, mainEl.firstChild);
+  }
+
+  // ---------- Search ----------
+
+  var searchDebounce = null;
+
+  searchInput.addEventListener("input", function () {
+    var term = searchInput.value.trim();
+    clearTimeout(searchDebounce);
+    if (term.length < 2) { if (!term) renderEmptyState(); return; }
+    searchDebounce = setTimeout(function () { runSearch(term); }, 380);
+  });
+
+  searchInput.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { searchInput.value = ""; renderEmptyState(); }
+    if (e.key === "Enter") { clearTimeout(searchDebounce); runSearch(searchInput.value.trim()); }
+  });
+
+  function runSearch(term) {
+    if (term.length < 2) return;
+    currentUri = null;
+    renderTrail();
+    searchSpinner.classList.add("active");
+    clear(mainEl);
+    mainEl.appendChild(el("div", { class: "results-heading", text: "Searching for \u201c" + term + "\u201d\u2026" }));
+
+    var esc = escLiteral(term.toLowerCase());
+    var q = "PREFIX schema: <https://schema.org/>\n" +
+      "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
+      "SELECT DISTINCT ?s ?label ?type WHERE {\n" +
+      "  { ?s schema:name ?label } UNION { ?s rdfs:label ?label }\n" +
+      "  FILTER(CONTAINS(LCASE(STR(?label)), \"" + esc + "\"))\n" +
+      "  OPTIONAL { ?s a ?type }\n" +
+      "} LIMIT 150";
+
+    sparql(q).then(function (rows) {
+      searchSpinner.classList.remove("active");
+      renderSearchResults(term, rows);
+    }).catch(function (err) {
+      searchSpinner.classList.remove("active");
+      clear(mainEl);
+      renderError("Search failed: " + err.message, function () { runSearch(term); });
+    });
+  }
+
+  function renderSearchResults(term, rows) {
+    clear(mainEl);
+    var byUri = {};
+    rows.forEach(function (r) {
+      var uri = r.s.value;
+      if (!byUri[uri]) byUri[uri] = { uri: uri, label: r.label ? r.label.value : uri, types: [] };
+      if (r.type) {
+        var t = shortLabel(r.type.value);
+        if (byUri[uri].types.indexOf(t) === -1) byUri[uri].types.push(t);
+      }
+    });
+    var list = Object.keys(byUri).map(function (k) { return byUri[k]; });
+    var lower = term.toLowerCase();
+    list.sort(function (a, b) {
+      var ea = a.label.toLowerCase() === lower ? 0 : a.label.toLowerCase().indexOf(lower) === 0 ? 1 : 2;
+      var eb = b.label.toLowerCase() === lower ? 0 : b.label.toLowerCase().indexOf(lower) === 0 ? 1 : 2;
+      if (ea !== eb) return ea - eb;
+      return a.label.length - b.label.length;
+    });
+    list = list.slice(0, 60);
+
+    if (!list.length) {
+      mainEl.appendChild(el("div", { class: "results-heading", text: "No matches for \u201c" + term + "\u201d" }));
+      mainEl.appendChild(el("p", { class: "column-empty", text: "Try a shorter or differently spelled term \u2014 search matches schema:name and rdfs:label exactly as recorded." }));
+      return;
+    }
+
+    mainEl.appendChild(el("div", { class: "results-heading", text: list.length + " match" + (list.length === 1 ? "" : "es") + " for \u201c" + term + "\u201d" }));
+    list.forEach(function (item) {
+      var card = el("button", { class: "result-card" });
+      card.appendChild(el("div", { class: "result-label", text: item.label }));
+      var meta = el("div", { class: "result-meta" });
+      item.types.slice(0, 3).forEach(function (t) { meta.appendChild(el("span", { class: "type-pill", text: t })); });
+      meta.appendChild(el("span", { class: "uri-sub", text: shortLabel(item.uri) }));
+      card.appendChild(meta);
+      card.addEventListener("click", function () { navigate(item.uri, { label: item.label }); });
+      mainEl.appendChild(card);
+    });
+  }
+
+  // ---------- Entity record ----------
+
+  function loadEntity(uri) {
+    clear(mainEl);
+    mainEl.appendChild(el("div", { class: "results-heading", text: "Loading record\u2026" }));
+
+    var metaQuery = "PREFIX schema: <https://schema.org/>\n" +
+      "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
+      "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+      "SELECT ?p ?o WHERE {\n" +
+      "  VALUES ?p { schema:name rdfs:label rdf:type schema:description schema:alternateName }\n" +
+      "  " + iriRef(uri) + " ?p ?o\n" +
+      "}";
+
+    var sourcesQuery = "SELECT ?g (COUNT(*) AS ?c) WHERE {\n" +
+      "  { GRAPH ?g { " + iriRef(uri) + " ?p1 ?o1 } } UNION { GRAPH ?g { ?s1 ?p2 " + iriRef(uri) + " } }\n" +
+      "} GROUP BY ?g ORDER BY DESC(?c)";
+
+    var outCountsQuery = "SELECT ?p (COUNT(*) AS ?c) WHERE {\n" +
+      "  GRAPH ?g { " + iriRef(uri) + " ?p ?o }\n" +
+      "} GROUP BY ?p ORDER BY DESC(?c)";
+
+    var inCountsQuery = "SELECT ?p (COUNT(*) AS ?c) WHERE {\n" +
+      "  GRAPH ?g { ?s ?p " + iriRef(uri) + " }\n" +
+      "} GROUP BY ?p ORDER BY DESC(?c)";
+
+    Promise.all([
+      sparql(metaQuery),
+      sparql(sourcesQuery),
+      sparql(outCountsQuery),
+      sparql(inCountsQuery)
+    ]).then(function (results) {
+      renderRecord(uri, results[0], results[1], results[2], results[3]);
+    }).catch(function (err) {
+      clear(mainEl);
+      renderError("Couldn\u2019t load this record: " + err.message, function () { loadEntity(uri); });
+    });
+  }
+
+  function renderRecord(uri, metaRows, sourceRows, outCounts, inCounts) {
+    clear(mainEl);
+
+    var label = uri, types = [], description = null;
+    metaRows.forEach(function (r) {
+      if ((r.p.value === "https://schema.org/name" || r.p.value === "http://www.w3.org/2000/01/rdf-schema#label") && label === uri) label = r.o.value;
+      if (r.p.value === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") types.push(r.o.value);
+      if (r.p.value === "https://schema.org/description" && !description) description = r.o.value;
+    });
+
+    pushTrail(uri, label);
+
+    var header = el("div", { class: "record-header" });
+    var eyebrow = el("div", { class: "record-eyebrow" });
+    types.slice(0, 4).forEach(function (t) { eyebrow.appendChild(el("span", { class: "type-pill", text: shortLabel(t) })); });
+    header.appendChild(eyebrow);
+    header.appendChild(el("h1", { class: "record-title", text: label }));
+
+    var uriLine = el("div", { class: "record-uri" });
+    if (isSafeHref(uri)) {
+      var a = el("a", { href: uri, target: "_blank", rel: "noopener", text: uri });
+      uriLine.appendChild(a);
+    } else {
+      uriLine.textContent = uri;
+    }
+    header.appendChild(uriLine);
+
+    if (description) header.appendChild(el("p", { class: "record-desc", text: description }));
+
+    if (sourceRows.length) {
+      var srcRow = el("div", { class: "source-row" });
+      sourceRows.forEach(function (r) {
+        var name = shortLabel(r.g.value);
+        var chip = el("span", { class: "source-chip" });
+        var b = document.createElement("b");
+        b.textContent = name;
+        chip.appendChild(b);
+        chip.appendChild(document.createTextNode(" \u00b7 " + r.c.value));
+        srcRow.appendChild(chip);
+      });
+      header.appendChild(srcRow);
+    }
+
+    var totalOut = outCounts.reduce(function (a, r) { return a + parseInt(r.c.value, 10); }, 0);
+    var totalIn = inCounts.reduce(function (a, r) { return a + parseInt(r.c.value, 10); }, 0);
+    var stats = el("div", { class: "record-stats" });
+    stats.appendChild(statLine(totalOut + " statements describing it"));
+    stats.appendChild(statLine(totalIn + " statements pointing to it"));
+    header.appendChild(stats);
+
+    mainEl.appendChild(header);
+
+    var columns = el("div", { class: "columns" });
+    var outCol = el("div", {});
+    outCol.appendChild(el("div", { class: "column-heading", text: "Described as" }));
+    columns.appendChild(outCol);
+
+    var inCol = el("div", {});
+    inCol.appendChild(el("div", { class: "column-heading", text: "Referenced by" }));
+    columns.appendChild(inCol);
+
+    mainEl.appendChild(columns);
+
+    renderColumn(outCol, uri, outCounts, "out");
+    renderColumn(inCol, uri, inCounts, "in");
+  }
+
+  function statLine(text) {
+    var parts = text.match(/^(\d+)(.*)$/);
+    var s = el("span", { class: "stat" });
+    var b = document.createElement("b");
+    b.textContent = parts[1];
+    s.appendChild(b);
+    s.appendChild(document.createTextNode(parts[2]));
+    return s;
+  }
+
+  function renderColumn(colEl, uri, counts, direction) {
+    if (!counts.length) {
+      colEl.appendChild(el("div", { class: "column-empty", text: direction === "out" ? "No outgoing statements recorded." : "Nothing in the graph points to this record." }));
+      return;
+    }
+    counts.forEach(function (row) {
+      var pred = row.p.value;
+      var total = parseInt(row.c.value, 10);
+      var group = el("div", { class: "pred-group" });
+      var labelWrap = el("div", { class: "pred-label" });
+      labelWrap.appendChild(document.createTextNode(shortLabel(pred)));
+      var countEl = document.createElement("span");
+      countEl.className = "pred-count";
+      countEl.textContent = total;
+      labelWrap.appendChild(countEl);
+      group.appendChild(labelWrap);
+
+      var rowsWrap = el("div", { class: "pred-rows" });
+      rowsWrap.appendChild(el("div", { class: "group-loading", text: "Loading\u2026" }));
+      group.appendChild(rowsWrap);
+      colEl.appendChild(group);
+
+      loadGroupPage(uri, pred, direction, 0, total, rowsWrap, true);
+    });
+  }
+
+  function loadGroupPage(uri, pred, direction, offset, total, rowsWrap, isFirst) {
+    var pattern = direction === "out"
+      ? iriRef(uri) + " " + iriRef(pred) + " ?item"
+      : "?item " + iriRef(pred) + " " + iriRef(uri);
+
+    var q = "PREFIX schema: <https://schema.org/>\n" +
+      "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
+      "SELECT ?item (SAMPLE(?lbl) AS ?label) (SAMPLE(?g) AS ?graph) WHERE {\n" +
+      "  GRAPH ?g { " + pattern + " }\n" +
+      "  OPTIONAL { ?item schema:name ?lbl }\n" +
+      "  OPTIONAL { ?item rdfs:label ?lbl }\n" +
+      "} GROUP BY ?item ORDER BY ?item LIMIT " + PAGE_SIZE + " OFFSET " + offset;
+
+    sparql(q).then(function (rows) {
+      if (isFirst) clear(rowsWrap);
+      rows.forEach(function (r) { rowsWrap.appendChild(buildValueRow(r)); });
+
+      var loadedSoFar = offset + rows.length;
+      var oldFooter = rowsWrap.querySelector(".load-more-row");
+      if (oldFooter) rowsWrap.removeChild(oldFooter);
+
+      if (loadedSoFar < total) {
+        var footer = el("div", { class: "load-more-row" });
+        var btn = el("button", { class: "load-more-btn", text: "Show " + Math.min(PAGE_SIZE, total - loadedSoFar) + " more of " + total });
+        btn.addEventListener("click", function () {
+          btn.disabled = true;
+          btn.textContent = "Loading\u2026";
+          loadGroupPage(uri, pred, direction, loadedSoFar, total, rowsWrap, false);
+        });
+        footer.appendChild(btn);
+        rowsWrap.appendChild(footer);
+      }
+    }).catch(function (err) {
+      if (isFirst) clear(rowsWrap);
+      rowsWrap.appendChild(el("div", { class: "group-loading", text: "Couldn\u2019t load: " + err.message }));
+    });
+  }
+
+  function buildValueRow(r) {
+    var row = el("div", { class: "value-row" });
+    var main = el("div", { class: "value-main" });
+
+    if (r.item.type === "uri") {
+      var uri = r.item.value;
+      var label = r.label ? r.label.value : null;
+      var btn = el("button", { class: "value-link", text: label || shortLabel(uri) });
+      btn.addEventListener("click", function () { navigate(uri, { label: label }); });
+      main.appendChild(btn);
+      if (label) main.appendChild(el("div", { class: "value-curie", text: shortLabel(uri) }));
+      row.appendChild(main);
+
+      if (!isLocalUri(uri) && isSafeHref(uri)) {
+        var ext = el("a", { class: "ext-link", href: uri, target: "_blank", rel: "noopener", title: "Open source", text: "\u2197" });
+        row.appendChild(ext);
+      }
+    } else {
+      var val = r.item.value;
+      var tag = "";
+      if (r.item["xml:lang"]) tag = r.item["xml:lang"];
+      else if (r.item.datatype && !/string$/.test(r.item.datatype)) tag = shortLabel(r.item.datatype);
+      var litWrap = el("span", { class: "value-literal", text: val });
+      if (tag) {
+        var tagEl = document.createElement("span");
+        tagEl.className = "lit-tag";
+        tagEl.textContent = tag;
+        litWrap.appendChild(tagEl);
+      }
+      main.appendChild(litWrap);
+      row.appendChild(main);
+    }
+
+    if (r.graph) row.appendChild(el("span", { class: "graph-tag", text: shortLabel(r.graph.value) }));
+    return row;
+  }
+
+  // ---------- Init ----------
+
+  var initialHash = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (initialHash && /^https?:\/\//i.test(initialHash)) {
+    currentUri = initialHash;
+    history.replaceState({ uri: initialHash }, "", "#" + encodeURIComponent(initialHash));
+    loadEntity(initialHash);
+  } else {
+    renderEmptyState();
+  }
+  searchInput.focus();
+})();
+</script>
+</body>
+</html>
